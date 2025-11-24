@@ -18,9 +18,25 @@
     color: var(--label-color);
 }
 
-/* Sidebar background */
+/* Sidebar background and width */
 [data-testid=stSidebar] {
     background-color: var(--sidebar-color);
+    min-width: 350px !important;
+    max-width: 350px !important;
+}
+
+[data-testid=stSidebar] > div:first-child {
+    width: 350px !important;
+}
+
+[data-testid=stSidebar][aria-expanded="true"] > div:first-child {
+    width: 350px !important;
+    margin-left: 0px;
+}
+
+/* Sidebar content container */
+section[data-testid="stSidebar"] > div {
+    width: 350px !important;
 }
 
 /* Main app background */
@@ -76,14 +92,24 @@
     border-color: var(--widget-color);
 }
 
-/* Header background */
+/* Header background - RED */
 .stApp > header {
-    background-color: var(--header-color);
+    background-color: var(--header-color) !important;
 }
 
 /* Header text */
 .stApp > header p {
     color: var(--text-color);
+}
+
+/* Toolbar and header elements */
+header[data-testid="stHeader"] {
+    background-color: var(--header-color) !important;
+}
+
+/* Top menu area */
+.stApp header {
+    background-color: var(--header-color) !important;
 }
 
 /* Colored text for links */
