@@ -146,6 +146,23 @@ header[data-testid="stHeader"] {
     padding: 5px 0;
 }
 
+/* Streamlit info messages - white text for better readability */
+.stAlert > div {
+    color: #ffffff !important;
+}
+
+.stAlert p {
+    color: #ffffff !important;
+}
+
+div[data-baseweb="notification"] {
+    color: #ffffff !important;
+}
+
+div[data-baseweb="notification"] p {
+    color: #ffffff !important;
+}
+
 /* Email text styling */
 .email-text {
     font-size: 1.5em;
