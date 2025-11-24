@@ -309,6 +309,18 @@ def main_page():
                     st.divider()
                     return
                 
+                # Crea gli array degli anni basandosi sui dati effettivamente disponibili
+                anni_disponibili = []  # Stringhe per matplotlib
+                Annate1_disponibili = []  # Numeri per Altair
+                count = 0
+                for year in range(AnnoPartenza, AnnoFine):
+                    if count < len(Mese):
+                        anni_disponibili.append(str(year))
+                        Annate1_disponibili.append(year)
+                        count += 1
+                    else:
+                        break
+                
                 colori = []
                 for Y in Mese:
                     colori.append(Color("#FF0000", "#0000FF", Y, 0))
@@ -333,7 +345,7 @@ def main_page():
                 if selections[key] == "Image":
                     fig, ax = plt.subplots(figsize=(xsize, ysize))
 
-                    ax.bar(Annate, Mese, color=['blue' if x >= 0 else 'red' for x in Mese])
+                    ax.bar(anni_disponibili, Mese, color=['blue' if x >= 0 else 'red' for x in Mese])
 
                     ax.axhline(np.mean(Mese), color="red", linestyle='--', linewidth=2)
                     ax.axhline(0, color="green")
@@ -345,7 +357,7 @@ def main_page():
                                                 label=f"Average ± Standard Deviation ({round(DevStd, 2)}%)")
 
                     ax.fill_between(
-                        Annate,
+                        anni_disponibili,
                         np.mean(Mese) + DevStd,
                         np.mean(Mese) - DevStd,
                         color='gray',
@@ -370,7 +382,7 @@ def main_page():
 
                 else:
                     avacac = 2
-                    Assex = Annate1
+                    Assex = Annate1_disponibili
                     Assey = Mese
 
                     Valore_Media = np.mean(Mese)
@@ -460,16 +472,16 @@ def main_page():
                         return f"{'+' if val > 0 else ''}{val:.2f}%"
 
                     MeseDF = pd.DataFrame({
-                        "Year 📆": Annate,
-                        "Lows 📉": [format_value(x) for x in Low(i, AnnoPartenza, AnnoFine)],
+                        "Year 📆": anni_disponibili,
+                        "Lows 📉": [format_value(x) for x in Low(i, AnnoPartenza, AnnoFine)[:len(Mese)]],
                         "Return 📊": [format_value(x) for x in Mese],
-                        "Highs 📈": [format_value(x) for x in High(i, AnnoPartenza, AnnoFine)]
+                        "Highs 📈": [format_value(x) for x in High(i, AnnoPartenza, AnnoFine)[:len(Mese)]]
                     })
                     st.dataframe(MeseDF, hide_index=True)
 
                 else:
-                    Lows = Low(i, AnnoPartenza, AnnoFine)
-                    Highs = High(i, AnnoPartenza, AnnoFine)
+                    Lows = Low(i, AnnoPartenza, AnnoFine)[:len(Mese)]
+                    Highs = High(i, AnnoPartenza, AnnoFine)[:len(Mese)]
 
                     mostra_highs = True
                     mostra_lows = True
@@ -479,7 +491,7 @@ def main_page():
                         return f'color: {color}; text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white; font-weight: bold;'
 
                     table1 = pd.DataFrame({
-                        "Year": Annate,
+                        "Year": anni_disponibili,
                         "Monthly return": Mese,
                     })
 
