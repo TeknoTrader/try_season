@@ -11,6 +11,11 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+# Disable yfinance verbose output
+import logging
+logging.getLogger('yfinance').setLevel(logging.CRITICAL)
+yf.pdr_override()
+
 # Colors
 sidebar_color = "#1A4054"
 main_bg_color = "#649ABA"
@@ -31,6 +36,15 @@ NomiMesi1 = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AU
                  "NOVEMBER", "DECEMBER"]
 
 current_year = datetime.now().year
+
+# Apply label colors CSS immediately (before any widgets are created)
+st.markdown(f"""
+    <style>
+    .stRadio label, .stSelectbox label, .stTextInput label, .stNumberInput label, .stMultiSelect label, .stToggle label {{
+        color: {label_color};
+    }}
+    </style>
+    """, unsafe_allow_html=True)
 
 
 # Load external CSS
@@ -58,7 +72,7 @@ def Sortino_Ratio_Benchmark(returns, benchmark_ticker=None, period='1y'):
         returns_array = np.array(returns)
 
     if benchmark_ticker:
-        benchmark_data = yf.download(benchmark_ticker, period=period)
+        benchmark_data = yf.download(benchmark_ticker, period=period, progress=False)
 
         if len(benchmark_data) == 0:
             raise ValueError("Impossibile scaricare i dati del benchmark.")
@@ -201,7 +215,7 @@ def main_page():
         Text(f"\nEnd of the relevation: {end}")
         year = 0
         try:
-            data = yf.download(ticker, interval = "1mo")
+            data = yf.download(ticker, interval="1mo", progress=False)
             if not data.empty:
                 first_date = data.index[0]
                 Text(f"Data of  {ticker} avaible from: {first_date.date()}")
@@ -240,7 +254,7 @@ def main_page():
         inizio = date(AnnoPartenza, 1, 1)
         Text(f"\nStarting calculations from: {inizio}")
 
-        df = yf.download(ticker, start=inizio, end=end, interval="1mo")
+        df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
         df = pd.DataFrame(df["Open"])
 
         array = []
@@ -484,6 +498,46 @@ def main_page():
 
                         return styler
 
+                    # CSS personalizzato per le tabelle (deve essere inline)
+                    custom_css = """
+                        <style>
+                        thead tr th:first-child {display:none}
+                        tbody th {display:none}
+                        .col0 {width: 20% !important;}
+                        .col1, .col2, .col3 {width: 26.67% !important;}
+                        .dataframe {
+                            width: 100% !important;
+                            text-align: center;
+                        }
+                        .dataframe td, .dataframe th {
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                        }
+                        .numeric-cell {
+                            position: relative;
+                            z-index: 1;
+                            display: flex !important;
+                            justify-content: center !important;
+                            align-items: center !important;
+                            height: 100%;
+                        }
+                        .numeric-cell::before {
+                            content: "";
+                            position: absolute;
+                            top: 2px;
+                            left: 2px;
+                            right: 2px;
+                            bottom: 2px;
+                            background: rgba(255, 255, 255, 0.7);
+                            z-index: -1;
+                            border-radius: 4px;
+                        }
+                        </style>
+                    """
+
+                    # Inject CSS with Markdown
+                    st.markdown(custom_css, unsafe_allow_html=True)
+
                     st.write(
                         table1.style.pipe(style_table).to_html(classes=['dataframe', 'col0', 'col1', 'col2', 'col3'],
                                                                escape=False),
@@ -503,7 +557,7 @@ def main_page():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Close"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -512,7 +566,7 @@ def main_page():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Close"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -526,7 +580,7 @@ def main_page():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["High"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -535,7 +589,7 @@ def main_page():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["High"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -549,7 +603,7 @@ def main_page():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Low"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -558,7 +612,7 @@ def main_page():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Low"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -626,7 +680,7 @@ def Simple_strategy():
     year = 0
     
     try:
-        data = yf.download(ticker, interval = "1mo")
+        data = yf.download(ticker, interval="1mo", progress=False)
         if not data.empty:
             first_date = data.index[0]
             Text(f"Data of  {ticker} avaible from: {first_date.date()}")
@@ -665,7 +719,7 @@ def Simple_strategy():
     inizio = date(AnnoPartenza, 1, 1)
     Text(f"\nStarting calculations from: {inizio}")
 
-    df = yf.download(ticker, start=inizio, end=end, interval="1mo")
+    df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
     df = pd.DataFrame(df["Open"])
 
     array = []
@@ -712,7 +766,7 @@ def Simple_strategy():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Close"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -721,7 +775,7 @@ def Simple_strategy():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Close"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -735,7 +789,7 @@ def Simple_strategy():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["High"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -744,7 +798,7 @@ def Simple_strategy():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["High"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -758,7 +812,7 @@ def Simple_strategy():
             if (mese != 12):
                 strt = date(i, mese, 1)
                 end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Low"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
@@ -767,7 +821,7 @@ def Simple_strategy():
             else:
                 strt = date(i, mese, 1)
                 end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo")
+                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
                 dffc = pd.DataFrame(dff["Low"])
                 dffo = pd.DataFrame(dff["Open"])
                 resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
