@@ -223,32 +223,33 @@ def main_page():
         Text(f"\nStarting calculations from: {inizio}")
         
         # Prova a scaricare i dati nell'intervallo richiesto
-        try:
-            df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
-            
-            if df.empty:
-                st.warning(f"# ⚠️ No data available for {ticker} in the selected period!")
-                st.write(f"### The ticker {ticker} might not have data between {AnnoPartenza} and {AnnoFine}.")
-                st.write("### Try selecting a different time period or check the ticker on [Yahoo Finance](https://finance.yahoo.com)")
+        with st.spinner(f'📥 Downloading data for {ticker} from {AnnoPartenza} to {AnnoFine}...'):
+            try:
+                df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
+                
+                if df.empty:
+                    st.warning(f"# ⚠️ No data available for {ticker} in the selected period!")
+                    st.write(f"### The ticker {ticker} might not have data between {AnnoPartenza} and {AnnoFine}.")
+                    st.write("### Try selecting a different time period or check the ticker on [Yahoo Finance](https://finance.yahoo.com)")
+                    sys.exit(1)
+                
+                # Trova la prima data effettivamente disponibile
+                first_date = df.index[0]
+                first_year = int(first_date.strftime('%Y'))
+                Text(f"Data for {ticker} available from: {first_date.date()}")
+                
+                # Aggiusta l'anno di partenza se necessario
+                if first_year > AnnoPartenza:
+                    AnnoPartenza = first_year
+                    st.info(f"ℹ️ Adjusted starting year to {AnnoPartenza} (first available data)")
+                    inizio = date(AnnoPartenza, 1, 1)
+                    Text(f"\nAdjusted starting calculations from: {inizio}")
+            except Exception as e:
+                st.warning(f"# ⚠️ Error downloading data for {ticker}")
+                st.write("### Maybe you didn't select the right ticker or there's a connection issue.")
+                st.write("### You can check the ticker on [Yahoo finance ticker's list](https://finance.yahoo.com/lookup/)")
+                st.write(f"Error details: {str(e)}")
                 sys.exit(1)
-            
-            # Trova la prima data effettivamente disponibile
-            first_date = df.index[0]
-            first_year = int(first_date.strftime('%Y'))
-            Text(f"Data for {ticker} available from: {first_date.date()}")
-            
-            # Aggiusta l'anno di partenza se necessario
-            if first_year > AnnoPartenza:
-                AnnoPartenza = first_year
-                st.info(f"ℹ️ Adjusted starting year to {AnnoPartenza} (first available data)")
-                inizio = date(AnnoPartenza, 1, 1)
-                Text(f"\nAdjusted starting calculations from: {inizio}")
-        except Exception as e:
-            st.warning(f"# ⚠️ Error downloading data for {ticker}")
-            st.write("### Maybe you didn't select the right ticker or there's a connection issue.")
-            st.write("### You can check the ticker on [Yahoo finance ticker's list](https://finance.yahoo.com/lookup/)")
-            st.write(f"Error details: {str(e)}")
-            sys.exit(1)
 
         Annate1 = list(range(AnnoPartenza, AnnoFine))
         NomiMesi = list(range(1, 13))
@@ -299,6 +300,9 @@ def main_page():
 
         if st.button("Update Visualization"):
             st.session_state.update_button = not st.session_state.update_button
+            if st.session_state.update_button:
+                st.info("🔄 Generating visualizations... This will take a moment.")
+            st.rerun()
 
         def Represent(Mese, i, selections, db_selections):
             if st.session_state.update_button:
@@ -568,11 +572,30 @@ def main_page():
 
                 st.divider()
 
-        for i in range(1, 13):
-            selections = {}
-            db_selections = {}
-            if (Months == True) or (NomiMesi1[i - 1] in options):
-                Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
+        # Aggiungi un flag per evitare calcoli multipli simultanei
+        if 'is_calculating' not in st.session_state:
+            st.session_state.is_calculating = False
+        
+        # Mostra un messaggio se sta già calcolando
+        if st.session_state.is_calculating:
+            st.info("⏳ Calculation in progress... Please wait.")
+            return
+        
+        # Inizia i calcoli con protezione
+        st.session_state.is_calculating = True
+        
+        try:
+            with st.spinner('🔄 Loading data and generating charts... Please wait.'):
+                for i in range(1, 13):
+                    selections = {}
+                    db_selections = {}
+                    if (Months == True) or (NomiMesi1[i - 1] in options):
+                        # Mostra quale mese sta processando
+                        with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
+                            Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
+        finally:
+            # Resetta il flag anche in caso di errore
+            st.session_state.is_calculating = False
 
     def Mensilit(mese, startY, endY):
         array = []
@@ -967,22 +990,28 @@ def Simple_strategy():
         st.session_state.Positive = []
         st.session_state.calmar = []
 
-        for i in range(1, 13):
-            if (Months == True) or (NomiMesi1[i - 1] in options):
-                Mese = Mensilit(i, AnnoPartenza, AnnoFine)
-                st.session_state.MesiComplessivi.append(round(np.mean(Mese), 2))
-                st.session_state.WRComplessivi.append(round(WinRate(Mese), 2))
-                st.session_state.Months_to_consider.append(NomiMesi2[i - 1])
-                drawdowns = drawdown(Low(i, AnnoPartenza, AnnoFine), Mese)
-                st.session_state.DD.append(drawdowns)
-                st.session_state.Trades.append(round(Profit_Factor(Mese), 2))
-                st.session_state.Sortin.append(round(Sortino_Ratio_Benchmark(Mese, benchmark_ticker=Name_Benchmark), 2))
-                st.session_state.MaxDD.append(round(min(drawdowns), 2))
-                st.session_state.Positive.append([High(i, AnnoPartenza, AnnoFine)])
-                st.session_state.Negative.append([Low(i, AnnoPartenza, AnnoFine)])
-                st.session_state.calmar.append(round(calmar_ratio(Mese, min(drawdowns)),2))
+        with st.spinner('🔄 Calculating strategy performance... Please wait, this may take a few moments.'):
+            for i in range(1, 13):
+                if (Months == True) or (NomiMesi1[i - 1] in options):
+                    # Mostra quale mese sta processando
+                    progress_text = f'📊 Processing {NomiMesi1[i - 1]}... ({i}/12)'
+                    with st.spinner(progress_text):
+                        Mese = Mensilit(i, AnnoPartenza, AnnoFine)
+                        st.session_state.MesiComplessivi.append(round(np.mean(Mese), 2))
+                        st.session_state.WRComplessivi.append(round(WinRate(Mese), 2))
+                        st.session_state.Months_to_consider.append(NomiMesi2[i - 1])
+                        drawdowns = drawdown(Low(i, AnnoPartenza, AnnoFine), Mese)
+                        st.session_state.DD.append(drawdowns)
+                        st.session_state.Trades.append(round(Profit_Factor(Mese), 2))
+                        st.session_state.Sortin.append(round(Sortino_Ratio_Benchmark(Mese, benchmark_ticker=Name_Benchmark), 2))
+                        st.session_state.MaxDD.append(round(min(drawdowns), 2))
+                        st.session_state.Positive.append([High(i, AnnoPartenza, AnnoFine)])
+                        st.session_state.Negative.append([Low(i, AnnoPartenza, AnnoFine)])
+                        st.session_state.calmar.append(round(calmar_ratio(Mese, min(drawdowns)),2))
 
         st.session_state.data_calculated = True
+        st.success('✅ Calculations completed successfully!')
+        st.rerun()
 
     if st.session_state.data_calculated:
         representation_database = st.selectbox("Database Representation Method: ",
