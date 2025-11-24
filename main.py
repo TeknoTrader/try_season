@@ -302,6 +302,13 @@ def main_page():
 
         def Represent(Mese, i, selections, db_selections):
             if st.session_state.update_button:
+                # Controlla se ci sono abbastanza dati
+                if not Mese or len(Mese) < 3:
+                    Text3(f" {number_emojis[i - 1]} {NomiMesi1[i - 1]}", "#ffffff")
+                    st.warning(f"⚠️ Not enough data available for {NomiMesi1[i - 1]}. Need at least 3 years of data.")
+                    st.divider()
+                    return
+                
                 colori = []
                 for Y in Mese:
                     colori.append(Color("#FF0000", "#0000FF", Y, 0))
@@ -558,70 +565,103 @@ def main_page():
     def Mensilit(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Close"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Close"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Close"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Close"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
 
     def High(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["High"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["High"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["High"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["High"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
 
     def Low(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Low"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Low"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Low"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Low"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
     
     if (ticker != ""):
@@ -775,70 +815,103 @@ def Simple_strategy():
     def Mensilit(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Close"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Close"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Close"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Close"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
 
     def High(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["High"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["High"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["High"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["High"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
 
     def Low(mese, startY, endY):
         array = []
         for i in range(startY, endY):
-            if (mese != 12):
-                strt = date(i, mese, 1)
-                end = date(i, mese + 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Low"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
-            else:
-                strt = date(i, mese, 1)
-                end = date(i + 1, 1, 1)
-                dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
-                dffc = pd.DataFrame(dff["Low"])
-                dffo = pd.DataFrame(dff["Open"])
-                resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
-                result = resultAbs * 100 / dffo.iat[0, 0]
-                array.append(result)
+            try:
+                if (mese != 12):
+                    strt = date(i, mese, 1)
+                    end = date(i, mese + 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Low"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+                else:
+                    strt = date(i, mese, 1)
+                    end = date(i + 1, 1, 1)
+                    dff = yf.download(ticker, start=strt, end=end, interval="1mo", progress=False)
+                    if dff.empty or len(dff) == 0:
+                        continue
+                    dffc = pd.DataFrame(dff["Low"])
+                    dffo = pd.DataFrame(dff["Open"])
+                    if dffc.empty or dffo.empty or len(dffc) == 0 or len(dffo) == 0:
+                        continue
+                    resultAbs = dffc.iat[0, 0] - dffo.iat[0, 0]
+                    result = resultAbs * 100 / dffo.iat[0, 0]
+                    array.append(result)
+            except (IndexError, KeyError, Exception):
+                continue
         return array
 
     Bool_Benchmark = st.radio("Calculations of the \"Sortino Ratio\": ", ("With Benchmark", "Without Benchmark"))
