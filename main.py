@@ -231,7 +231,7 @@ def main_page():
             sys.exit(1)
 
         if year >= AnnoFine:
-            st.warning("# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE ", year)
+            st.warning(f"# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE {year}")
             sys.exit(1)
 
         end = date(AnnoFine, 1, 1)
@@ -696,7 +696,7 @@ def Simple_strategy():
         sys.exit(1)
 
     if year >= AnnoFine:
-        st.warning("# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE ", year)
+        st.warning(f"# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE {year}")
         sys.exit(1)
 
     end = date(AnnoFine, 1, 1)
