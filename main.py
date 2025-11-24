@@ -305,22 +305,27 @@ def main_page():
                     with cols[index % 3]:
                         st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month], disabled=disabled)
             else:
-                options = st.multiselect(
+                # Usa sempre selected_months dal session_state
+                current_selection = st.multiselect(
                     "# Select the months to consider",
                     NomiMesi1,
-                    default=st.session_state.selected_months if st.session_state.selected_months else [],
-                    disabled=disabled
+                    default=st.session_state.selected_months,
+                    disabled=disabled,
+                    key="month_selector"
                 )
-                # Salva la selezione
-                if not disabled:
-                    st.session_state.selected_months = options
+                # Aggiorna SOLO se non sta processando e se la selezione è cambiata
+                if not disabled and current_selection != st.session_state.selected_months:
+                    st.session_state.selected_months = current_selection
+                    st.session_state.update_button = False  # Reset update_button per richiedere nuovo click
         else:
-            options = NomiMesi1
             st.session_state.selected_months = NomiMesi1
+        
+        # Usa sempre selected_months
+        options = st.session_state.selected_months
 
         # Mostra quanti mesi sono selezionati
-        if options:
-            st.info(f"📊 {len(options)} month(s) selected. Click 'Update Visualization' to generate charts.")
+        if st.session_state.selected_months:
+            st.info(f"📊 {len(st.session_state.selected_months)} month(s) selected. Click 'Update Visualization' to generate charts.")
         
         # Bottone Update - disabilitato durante processing
         update_clicked = st.button("Update Visualization", disabled=disabled, type="primary")
@@ -599,22 +604,18 @@ def main_page():
 
         # Elabora SOLO se il bottone Update è stato premuto
         if st.session_state.update_button and st.session_state.is_processing:
-            try:
-                with st.spinner('🔄 Loading data and generating charts... Please wait.'):
-                    for i in range(1, 13):
-                        selections = {}
-                        db_selections = {}
-                        if (Months == True) or (NomiMesi1[i - 1] in options):
-                            # Mostra quale mese sta processando
-                            with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
-                                Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
-                    
-                    # Completato con successo
-                    st.success("✅ All visualizations generated successfully!")
-            finally:
-                # Resetta i flag
+            with st.spinner('🔄 Loading data and generating charts... Please wait.'):
+                for i in range(1, 13):
+                    selections = {}
+                    db_selections = {}
+                    if (Months == True) or (NomiMesi1[i - 1] in options):
+                        # Mostra quale mese sta processando
+                        with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
+                            Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
+                
+                # Completato con successo - resetta solo il flag processing
                 st.session_state.is_processing = False
-                st.rerun()
+                st.success("✅ All visualizations generated successfully!")
 
     def Mensilit(mese, startY, endY):
         array = []
@@ -874,21 +875,25 @@ def Simple_strategy():
                 with cols[index % 3]:
                     st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month], disabled=disabled_strategy)
         else:
-            options = st.multiselect(
+            current_selection_strategy = st.multiselect(
                 "# Select the months to consider",
                 NomiMesi1,
-                default=st.session_state.selected_months_strategy if st.session_state.selected_months_strategy else [],
-                disabled=disabled_strategy
+                default=st.session_state.selected_months_strategy,
+                disabled=disabled_strategy,
+                key="month_selector_strategy"
             )
-            if not disabled_strategy:
-                st.session_state.selected_months_strategy = options
+            if not disabled_strategy and current_selection_strategy != st.session_state.selected_months_strategy:
+                st.session_state.selected_months_strategy = current_selection_strategy
+                st.session_state.data_calculated = False  # Reset per richiedere nuovo calcolo
     else:
-        options = NomiMesi1
         st.session_state.selected_months_strategy = NomiMesi1
     
+    # Usa sempre selected_months_strategy
+    options = st.session_state.selected_months_strategy
+    
     # Mostra info su selezione
-    if options:
-        st.info(f"📊 {len(options)} month(s) selected for strategy calculation.")
+    if st.session_state.selected_months_strategy:
+        st.info(f"📊 {len(st.session_state.selected_months_strategy)} month(s) selected for strategy calculation.")
 
     def Mensilit(mese, startY, endY):
         array = []
@@ -1073,7 +1078,6 @@ def Simple_strategy():
         st.session_state.data_calculated = True
         st.session_state.is_processing_strategy = False
         st.success('✅ Calculations completed successfully!')
-        st.rerun()
 
     if st.session_state.data_calculated:
         representation_database = st.selectbox("Database Representation Method: ",
