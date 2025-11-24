@@ -1,0 +1,181 @@
+/* Color scheme */
+:root {
+    --sidebar-color: #1A4054;
+    --main-bg-color: #649ABA;
+    --text-color: #1A4054;
+    --widget-color: #ffffff;
+    --header-color: #880C14;
+    --label-color: #FFFFFF;
+}
+
+/* Radio, Selectbox, TextInput, NumberInput, MultiSelect, Toggle labels */
+.stRadio label, 
+.stSelectbox label, 
+.stTextInput label, 
+.stNumberInput label, 
+.stMultiSelect label, 
+.stToggle label {
+    color: var(--label-color);
+}
+
+/* Sidebar background */
+[data-testid=stSidebar] {
+    background-color: var(--sidebar-color);
+}
+
+/* Main app background */
+.stApp {
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+}
+
+/* Widget accent color */
+.stSelectbox, 
+.stMultiSelect, 
+.stSlider, 
+.stDateInput, 
+.stCheckbox, 
+.stRadio, 
+.stNumber, 
+.stTextInput, 
+.stTextArea {
+    accent-color: var(--widget-color);
+}
+
+/* Widget borders */
+.stSelectbox [data-baseweb="select"], 
+.stMultiSelect [data-baseweb="select"], 
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input,
+.stTextArea > div > div > textarea {
+    border-color: var(--widget-color);
+}
+
+/* Widget text color */
+.stSelectbox [data-baseweb="select"] > div,
+.stMultiSelect [data-baseweb="select"] > div,
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input,
+.stTextArea > div > div > textarea {
+    color: var(--text-color);
+}
+
+/* Widget background */
+.stSelectbox [data-baseweb="select"],
+.stMultiSelect [data-baseweb="select"],
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input,
+.stTextArea > div > div > textarea {
+    background-color: var(--main-bg-color);
+}
+
+/* Button styling */
+.stButton > button {
+    color: var(--text-color);
+    background-color: var(--widget-color);
+    border-color: var(--widget-color);
+}
+
+/* Header background */
+.stApp > header {
+    background-color: var(--header-color);
+}
+
+/* Header text */
+.stApp > header p {
+    color: var(--text-color);
+}
+
+/* Colored text for links */
+.colored-text {
+    color: var(--text-color);
+}
+
+.colored-text a {
+    color: var(--text-color);
+}
+
+/* White text class */
+.white-text {
+    color: white;
+}
+
+/* Flex container */
+.flex-container {
+    display: flex;
+    align-items: center;
+}
+
+/* Info box styling */
+.info-box {
+    background-color: #f0f0f0;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.info-box p {
+    color: #000000;
+    margin: 0;
+    padding: 5px 0;
+}
+
+/* Email text styling */
+.email-text {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.email-text a {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Dataframe styling */
+thead tr th:first-child {
+    display: none;
+}
+
+tbody th {
+    display: none;
+}
+
+.col0 {
+    width: 20% !important;
+}
+
+.col1, .col2, .col3 {
+    width: 26.67% !important;
+}
+
+.dataframe {
+    width: 100% !important;
+    text-align: center;
+}
+
+.dataframe td, 
+.dataframe th {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+.numeric-cell {
+    position: relative;
+    z-index: 1;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 100%;
+}
+
+.numeric-cell::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: -1;
+    border-radius: 4px;
+}
