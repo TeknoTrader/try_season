@@ -281,6 +281,10 @@ def main_page():
             st.session_state.is_processing = False
         if 'selected_months' not in st.session_state:
             st.session_state.selected_months = []
+        if 'chart_selections' not in st.session_state:
+            st.session_state.chart_selections = {}
+        if 'db_selections' not in st.session_state:
+            st.session_state.db_selections = {}
         
         # Disabilita widgets se sta processando
         disabled = st.session_state.is_processing
@@ -335,7 +339,7 @@ def main_page():
             st.session_state.is_processing = True
             st.rerun()
 
-        def Represent(Mese, i, selections, db_selections):
+        def Represent(Mese, i):
             # Controlla se ci sono abbastanza dati
             if not Mese or len(Mese) < 3:
                 Text3(f" {number_emojis[i - 1]} {NomiMesi1[i - 1]}", "#ffffff")
@@ -371,12 +375,14 @@ def main_page():
 
             Graphical_options = ["Image", "Interactive"]
             key = f'select_{i + 1}'
-            selections[key] = st.selectbox("### Type of chart", Graphical_options, key=key)
+            # Usa session_state per mantenere la selezione
+            default_idx = 0 if key not in st.session_state.chart_selections else Graphical_options.index(st.session_state.chart_selections[key])
+            st.session_state.chart_selections[key] = st.selectbox("### Type of chart", Graphical_options, index=default_idx, key=key)
 
             xsize = 10
             ysize = 10
 
-            if selections[key] == "Image":
+            if st.session_state.chart_selections[key] == "Image":
                 fig, ax = plt.subplots(figsize=(xsize, ysize))
 
                 ax.bar(anni_disponibili, Mese, color=['blue' if x >= 0 else 'red' for x in Mese])
@@ -499,9 +505,10 @@ def main_page():
 
                 options_DB = ["Graphical", "For CSV download"]
                 db_key = f'db_select_{i + 1}'
-                db_selections[db_key] = st.selectbox("### Type of database visualization", options_DB, key=db_key)
+                default_db_idx = 0 if db_key not in st.session_state.db_selections else options_DB.index(st.session_state.db_selections[db_key])
+                st.session_state.db_selections[db_key] = st.selectbox("### Type of database visualization", options_DB, index=default_db_idx, key=db_key)
 
-                if db_selections[db_key] == "For CSV download":
+                if st.session_state.db_selections[db_key] == "For CSV download":
                     def format_value(val):
                         return f"{'+' if val > 0 else ''}{val:.2f}%"
 
@@ -602,20 +609,25 @@ def main_page():
 
                 st.divider()
 
-        # Elabora SOLO se il bottone Update è stato premuto
-        if st.session_state.update_button and st.session_state.is_processing:
-            with st.spinner('🔄 Loading data and generating charts... Please wait.'):
+        # Elabora quando update_button è True
+        if st.session_state.update_button:
+            # Se sta processando, mostra spinner
+            if st.session_state.is_processing:
+                with st.spinner('🔄 Loading data and generating charts... Please wait.'):
+                    for i in range(1, 13):
+                        if (Months == True) or (NomiMesi1[i - 1] in options):
+                            # Mostra quale mese sta processando
+                            with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
+                                Represent(Mensilit(i, AnnoPartenza, AnnoFine), i)
+                    
+                    # Completato con successo - resetta solo il flag processing
+                    st.session_state.is_processing = False
+                    st.success("✅ All visualizations generated successfully!")
+            else:
+                # Già processato - mostra solo i risultati (permette di cambiare tipo grafico)
                 for i in range(1, 13):
-                    selections = {}
-                    db_selections = {}
                     if (Months == True) or (NomiMesi1[i - 1] in options):
-                        # Mostra quale mese sta processando
-                        with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
-                            Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
-                
-                # Completato con successo - resetta solo il flag processing
-                st.session_state.is_processing = False
-                st.success("✅ All visualizations generated successfully!")
+                        Represent(Mensilit(i, AnnoPartenza, AnnoFine), i)
 
     def Mensilit(mese, startY, endY):
         array = []
