@@ -273,8 +273,25 @@ def main_page():
         H = 400
 
         Text3("LET'S SEE THE RESULTS 📈")
+        
+        # Inizializza gli stati
+        if 'update_button' not in st.session_state:
+            st.session_state.update_button = False
+        if 'is_processing' not in st.session_state:
+            st.session_state.is_processing = False
+        if 'selected_months' not in st.session_state:
+            st.session_state.selected_months = []
+        
+        # Disabilita widgets se sta processando
+        disabled = st.session_state.is_processing
+        
+        # Mostra messaggio se sta processando
+        if st.session_state.is_processing:
+            st.warning("⏳ Processing data... Please wait. Do not click anything.")
+        
         Months = st.radio("Output selection:",
-                          ("Choose manually the months", "Represent every month"))
+                          ("Choose manually the months", "Represent every month"),
+                          disabled=disabled)
 
         first_representation_model = "Not longer"
         if (Months == "Choose manually the months"):
@@ -286,58 +303,66 @@ def main_page():
 
                 for index, month in enumerate(NomiMesi1):
                     with cols[index % 3]:
-                        st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month])
+                        st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month], disabled=disabled)
             else:
                 options = st.multiselect(
                     "# Select the months to consider",
-                    NomiMesi1
+                    NomiMesi1,
+                    default=st.session_state.selected_months if st.session_state.selected_months else [],
+                    disabled=disabled
                 )
+                # Salva la selezione
+                if not disabled:
+                    st.session_state.selected_months = options
         else:
             options = NomiMesi1
+            st.session_state.selected_months = NomiMesi1
 
-        if 'update_button' not in st.session_state:
-            st.session_state.update_button = False
-
-        if st.button("Update Visualization"):
-            st.session_state.update_button = not st.session_state.update_button
-            if st.session_state.update_button:
-                st.info("🔄 Generating visualizations... This will take a moment.")
+        # Mostra quanti mesi sono selezionati
+        if options:
+            st.info(f"📊 {len(options)} month(s) selected. Click 'Update Visualization' to generate charts.")
+        
+        # Bottone Update - disabilitato durante processing
+        update_clicked = st.button("Update Visualization", disabled=disabled, type="primary")
+        
+        if update_clicked and not st.session_state.is_processing:
+            st.session_state.update_button = True
+            st.session_state.is_processing = True
             st.rerun()
 
         def Represent(Mese, i, selections, db_selections):
-            if st.session_state.update_button:
-                # Controlla se ci sono abbastanza dati
-                if not Mese or len(Mese) < 3:
-                    Text3(f" {number_emojis[i - 1]} {NomiMesi1[i - 1]}", "#ffffff")
-                    st.warning(f"⚠️ Not enough data available for {NomiMesi1[i - 1]}. Need at least 3 years of data.")
-                    st.divider()
-                    return
-                
-                # Crea gli array degli anni basandosi sui dati effettivamente disponibili
-                anni_disponibili = []  # Stringhe per matplotlib
-                Annate1_disponibili = []  # Numeri per Altair
-                count = 0
-                for year in range(AnnoPartenza, AnnoFine):
-                    if count < len(Mese):
-                        anni_disponibili.append(str(year))
-                        Annate1_disponibili.append(year)
-                        count += 1
-                    else:
-                        break
-                
-                colori = []
-                for Y in Mese:
-                    colori.append(Color("#FF0000", "#0000FF", Y, 0))
+            # Controlla se ci sono abbastanza dati
+            if not Mese or len(Mese) < 3:
+                Text3(f" {number_emojis[i - 1]} {NomiMesi1[i - 1]}", "#ffffff")
+                st.warning(f"⚠️ Not enough data available for {NomiMesi1[i - 1]}. Need at least 3 years of data.")
+                st.divider()
+                return
+            
+            # Crea gli array degli anni basandosi sui dati effettivamente disponibili
+            anni_disponibili = []  # Stringhe per matplotlib
+            Annate1_disponibili = []  # Numeri per Altair
+            count = 0
+            for year in range(AnnoPartenza, AnnoFine):
+                if count < len(Mese):
+                    anni_disponibili.append(str(year))
+                    Annate1_disponibili.append(year)
+                    count += 1
+                else:
+                    break
+            
+            colori = []
+            for Y in Mese:
+                colori.append(Color("#FF0000", "#0000FF", Y, 0))
 
-                Text3(f" {number_emojis[i - 1]} MONTHLY RETURNS of {asset_name} on the month of: {NomiMesi1[i - 1]} \n", "#ffffff")
-                Text2(f"WIN RATE: {str(round(WinRate(Mese), 2))}%\n")
-                Text2(f"AVERAGE RETURN: {str(round(np.mean(Mese), 2))} %\n")
+            Text3(f" {number_emojis[i - 1]} MONTHLY RETURNS of {asset_name} on the month of: {NomiMesi1[i - 1]} \n", "#ffffff")
+            Text2(f"WIN RATE: {str(round(WinRate(Mese), 2))}%\n")
+            Text2(f"AVERAGE RETURN: {str(round(np.mean(Mese), 2))} %\n")
 
-                DevStd = math.sqrt(sum((x - np.mean(Mese)) ** 2 for x in Mese) / len(Mese))
-                Text2(f"Standard deviation: {str(round(DevStd, 2))}%")
+            DevStd = math.sqrt(sum((x - np.mean(Mese)) ** 2 for x in Mese) / len(Mese))
+            Text2(f"Standard deviation: {str(round(DevStd, 2))}%")
 
-                Text(f"Better excursion: {round(max(Mese), 2)}%")
-                Text(f"Worst excursion: {round(min(Mese), 2)} %")
+            Text(f"Better excursion: {round(max(Mese), 2)}%")
+            Text(f"Worst excursion: {round(min(Mese), 2)} %")
 
                 Graphical_options = ["Image", "Interactive"]
                 key = f'select_{i + 1}'
@@ -572,30 +597,24 @@ def main_page():
 
                 st.divider()
 
-        # Aggiungi un flag per evitare calcoli multipli simultanei
-        if 'is_calculating' not in st.session_state:
-            st.session_state.is_calculating = False
-        
-        # Mostra un messaggio se sta già calcolando
-        if st.session_state.is_calculating:
-            st.info("⏳ Calculation in progress... Please wait.")
-            return
-        
-        # Inizia i calcoli con protezione
-        st.session_state.is_calculating = True
-        
-        try:
-            with st.spinner('🔄 Loading data and generating charts... Please wait.'):
-                for i in range(1, 13):
-                    selections = {}
-                    db_selections = {}
-                    if (Months == True) or (NomiMesi1[i - 1] in options):
-                        # Mostra quale mese sta processando
-                        with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
-                            Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
-        finally:
-            # Resetta il flag anche in caso di errore
-            st.session_state.is_calculating = False
+        # Elabora SOLO se il bottone Update è stato premuto
+        if st.session_state.update_button and st.session_state.is_processing:
+            try:
+                with st.spinner('🔄 Loading data and generating charts... Please wait.'):
+                    for i in range(1, 13):
+                        selections = {}
+                        db_selections = {}
+                        if (Months == True) or (NomiMesi1[i - 1] in options):
+                            # Mostra quale mese sta processando
+                            with st.spinner(f'📊 Processing {NomiMesi1[i - 1]}...'):
+                                Represent(Mensilit(i, AnnoPartenza, AnnoFine), i, selections, db_selections)
+                    
+                    # Completato con successo
+                    st.success("✅ All visualizations generated successfully!")
+            finally:
+                # Resetta i flag
+                st.session_state.is_processing = False
+                st.rerun()
 
     def Mensilit(mese, startY, endY):
         array = []
@@ -825,8 +844,23 @@ def Simple_strategy():
     H = 400
 
     Text3("LET'S SEE THE RESULTS 📈")
+    
+    # Inizializza stati per Simple_strategy
+    if 'selected_months_strategy' not in st.session_state:
+        st.session_state.selected_months_strategy = []
+    if 'is_processing_strategy' not in st.session_state:
+        st.session_state.is_processing_strategy = False
+    
+    # Disabilita widgets se sta processando
+    disabled_strategy = st.session_state.is_processing_strategy
+    
+    # Mostra messaggio se sta processando
+    if st.session_state.is_processing_strategy:
+        st.warning("⏳ Calculating strategy... Please wait. Do not click anything.")
+    
     Months = st.radio("Output selection:",
-                      ("Choose manually the months", "Represent every month"))
+                      ("Choose manually the months", "Represent every month"),
+                      disabled=disabled_strategy)
 
     first_representation_model = "Not longer"
     if (Months == "Choose manually the months"):
@@ -838,14 +872,23 @@ def Simple_strategy():
 
             for index, month in enumerate(NomiMesi1):
                 with cols[index % 3]:
-                    st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month])
+                    st.session_state.month_toggles[month] = st.toggle(month, st.session_state.month_toggles[month], disabled=disabled_strategy)
         else:
             options = st.multiselect(
                 "# Select the months to consider",
-                NomiMesi1
+                NomiMesi1,
+                default=st.session_state.selected_months_strategy if st.session_state.selected_months_strategy else [],
+                disabled=disabled_strategy
             )
+            if not disabled_strategy:
+                st.session_state.selected_months_strategy = options
     else:
         options = NomiMesi1
+        st.session_state.selected_months_strategy = NomiMesi1
+    
+    # Mostra info su selezione
+    if options:
+        st.info(f"📊 {len(options)} month(s) selected for strategy calculation.")
 
     def Mensilit(mese, startY, endY):
         array = []
@@ -949,9 +992,13 @@ def Simple_strategy():
                 continue
         return array
 
-    Bool_Benchmark = st.radio("Calculations of the \"Sortino Ratio\": ", ("With Benchmark", "Without Benchmark"))
+    Bool_Benchmark = st.radio("Calculations of the \"Sortino Ratio\": ", 
+                              ("With Benchmark", "Without Benchmark"),
+                              disabled=disabled_strategy)
     if Bool_Benchmark == "With Benchmark":
-        Name_Benchmark = st.text_input("Name of the Asset\'s benchmark?", value='^GSPC')
+        Name_Benchmark = st.text_input("Name of the Asset\'s benchmark?", 
+                                       value='^GSPC',
+                                       disabled=disabled_strategy)
     else:
         Name_Benchmark = ''
     
@@ -978,7 +1025,10 @@ def Simple_strategy():
     if 'calmar' not in st.session_state:
         st.session_state.calmar = []
 
-    if st.button('Ready to go!'):
+    ready_clicked = st.button('Ready to go!', disabled=disabled_strategy, type="primary")
+    
+    if ready_clicked and not st.session_state.is_processing_strategy:
+        st.session_state.is_processing_strategy = True
         st.session_state.MesiComplessivi = []
         st.session_state.WRComplessivi = []
         st.session_state.Months_to_consider = []
@@ -986,6 +1036,17 @@ def Simple_strategy():
         st.session_state.Sortin = []
         st.session_state.MaxDD = []
         st.session_state.DD = []
+        st.session_state.Negative = []
+        st.session_state.Positive = []
+        st.session_state.calmar = []
+        st.rerun()
+    
+    if st.session_state.is_processing_strategy:
+        st.session_state.MesiComplessivi = []
+        st.session_state.WRComplessivi = []
+        st.session_state.Months_to_consider = []
+        st.session_state.Trades = []
+        st.session_state.Sortin = []
         st.session_state.Negative = []
         st.session_state.Positive = []
         st.session_state.calmar = []
@@ -1010,6 +1071,7 @@ def Simple_strategy():
                         st.session_state.calmar.append(round(calmar_ratio(Mese, min(drawdowns)),2))
 
         st.session_state.data_calculated = True
+        st.session_state.is_processing_strategy = False
         st.success('✅ Calculations completed successfully!')
         st.rerun()
 
