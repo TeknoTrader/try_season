@@ -364,133 +364,133 @@ def main_page():
             Text(f"Better excursion: {round(max(Mese), 2)}%")
             Text(f"Worst excursion: {round(min(Mese), 2)} %")
 
-                Graphical_options = ["Image", "Interactive"]
-                key = f'select_{i + 1}'
-                selections[key] = st.selectbox("### Type of chart", Graphical_options, key=key)
+            Graphical_options = ["Image", "Interactive"]
+            key = f'select_{i + 1}'
+            selections[key] = st.selectbox("### Type of chart", Graphical_options, key=key)
 
-                xsize = 10
-                ysize = 10
+            xsize = 10
+            ysize = 10
 
-                if selections[key] == "Image":
-                    fig, ax = plt.subplots(figsize=(xsize, ysize))
+            if selections[key] == "Image":
+                fig, ax = plt.subplots(figsize=(xsize, ysize))
 
-                    ax.bar(anni_disponibili, Mese, color=['blue' if x >= 0 else 'red' for x in Mese])
+                ax.bar(anni_disponibili, Mese, color=['blue' if x >= 0 else 'red' for x in Mese])
 
-                    ax.axhline(np.mean(Mese), color="red", linestyle='--', linewidth=2)
-                    ax.axhline(0, color="green")
+                ax.axhline(np.mean(Mese), color="red", linestyle='--', linewidth=2)
+                ax.axhline(0, color="green")
 
-                    ax.set_xlabel("Years")
-                    ax.set_ylabel("Returns")
+                ax.set_xlabel("Years")
+                ax.set_ylabel("Returns")
 
-                    band_patch = mpatches.Patch(color='gray', alpha=0.3,
-                                                label=f"Average ± Standard Deviation ({round(DevStd, 2)}%)")
+                band_patch = mpatches.Patch(color='gray', alpha=0.3,
+                                            label=f"Average ± Standard Deviation ({round(DevStd, 2)}%)")
 
-                    ax.fill_between(
-                        anni_disponibili,
-                        np.mean(Mese) + DevStd,
-                        np.mean(Mese) - DevStd,
-                        color='gray',
-                        alpha=0.3,
-                        hatch="X",
-                        edgecolor="gray",
-                        label=f"Average ± Standard Deviation ({DevStd}%)"
-                    )
+                ax.fill_between(
+                    anni_disponibili,
+                    np.mean(Mese) + DevStd,
+                    np.mean(Mese) - DevStd,
+                    color='gray',
+                    alpha=0.3,
+                    hatch="X",
+                    edgecolor="gray",
+                    label=f"Average ± Standard Deviation ({DevStd}%)"
+                )
 
-                    ax.legend(handles=[
-                        plt.Line2D([0], [0], color="red", lw=4, label="Negative Months"),
-                        plt.Line2D([0], [0], color="blue", lw=4, label="Positive Months"),
-                        plt.Line2D([0], [0], color="red", linestyle='--', lw=2,
-                                   label=str("Average returns (" + str(round(np.mean(Mese), 2)) + "%)")), band_patch],
-                        loc='upper right'
-                    )
+                ax.legend(handles=[
+                    plt.Line2D([0], [0], color="red", lw=4, label="Negative Months"),
+                    plt.Line2D([0], [0], color="blue", lw=4, label="Positive Months"),
+                    plt.Line2D([0], [0], color="red", linestyle='--', lw=2,
+                               label=str("Average returns (" + str(round(np.mean(Mese), 2)) + "%)")), band_patch],
+                    loc='upper right'
+                )
 
-                    plt.xticks(rotation=45, ha='right')
-                    plt.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
+                plt.xticks(rotation=45, ha='right')
+                plt.tight_layout()
+                st.pyplot(fig)
+                plt.close(fig)
 
-                else:
-                    avacac = 2
-                    Assex = Annate1_disponibili
-                    Assey = Mese
+            else:
+                avacac = 2
+                Assex = Annate1_disponibili
+                Assey = Mese
 
-                    Valore_Media = np.mean(Mese)
+                Valore_Media = np.mean(Mese)
 
-                    df = pd.DataFrame({
-                        'Year': Assex,
-                        'Return': Assey
-                    })
+                df = pd.DataFrame({
+                    'Year': Assex,
+                    'Return': Assey
+                })
 
-                    y_min = min(min(Assey), Valore_Media - DevStd)
-                    y_max = max(max(Assey), Valore_Media + DevStd)
-                    y_domain = [y_min - 1, y_max + 1]
+                y_min = min(min(Assey), Valore_Media - DevStd)
+                y_max = max(max(Assey), Valore_Media + DevStd)
+                y_domain = [y_min - 1, y_max + 1]
 
-                    base = alt.Chart(df).encode(
-                        x=alt.X('Year:O', title='Years')
-                    )
+                base = alt.Chart(df).encode(
+                    x=alt.X('Year:O', title='Years')
+                )
 
-                    fill_area = base.mark_area(opacity=0.2, color='gray').encode(
-                        y=alt.Y('y1:Q', scale=alt.Scale(domain=y_domain), title='Return'),
-                        y2=alt.Y2('y2:Q'),
-                        tooltip=[
-                            alt.Tooltip('y1:Q', title='Media - Standard Deviation', format='.2f'),
-                            alt.Tooltip('y2:Q', title='Media + Standard Deviation', format='.2f'),
-                            alt.Tooltip('average_return:Q', title='Average Return', format='.2%')
-                        ]
-                    ).transform_calculate(
-                        y1=f"{Valore_Media - DevStd}",
-                        y2=f"{Valore_Media + DevStd}",
-                        average_return=f"{Valore_Media / 100}"
-                    )
+                fill_area = base.mark_area(opacity=0.2, color='gray').encode(
+                    y=alt.Y('y1:Q', scale=alt.Scale(domain=y_domain), title='Return'),
+                    y2=alt.Y2('y2:Q'),
+                    tooltip=[
+                        alt.Tooltip('y1:Q', title='Media - Standard Deviation', format='.2f'),
+                        alt.Tooltip('y2:Q', title='Media + Standard Deviation', format='.2f'),
+                        alt.Tooltip('average_return:Q', title='Average Return', format='.2%')
+                    ]
+                ).transform_calculate(
+                    y1=f"{Valore_Media - DevStd}",
+                    y2=f"{Valore_Media + DevStd}",
+                    average_return=f"{Valore_Media / 100}"
+                )
 
-                    bars = base.mark_bar().encode(
-                        y=alt.Y('Return:Q', scale=alt.Scale(domain=y_domain)),
-                        color=alt.condition(
-                            alt.datum.Return > 0,
-                            alt.value('blue'),
-                            alt.value('red')
-                        ),
-                        tooltip=[
-                            alt.Tooltip('Year:O', title='Year'),
-                            alt.Tooltip('return_percentage:Q', title='Return', format='.2%'),
-                            alt.Tooltip('average_return:Q', title='Average Return', format='.2%')
-                        ]
-                    ).transform_calculate(
-                        return_percentage="datum.Return/100",
-                        average_return=f"{Valore_Media / 100}"
-                    )
+                bars = base.mark_bar().encode(
+                    y=alt.Y('Return:Q', scale=alt.Scale(domain=y_domain)),
+                    color=alt.condition(
+                        alt.datum.Return > 0,
+                        alt.value('blue'),
+                        alt.value('red')
+                    ),
+                    tooltip=[
+                        alt.Tooltip('Year:O', title='Year'),
+                        alt.Tooltip('return_percentage:Q', title='Return', format='.2%'),
+                        alt.Tooltip('average_return:Q', title='Average Return', format='.2%')
+                    ]
+                ).transform_calculate(
+                    return_percentage="datum.Return/100",
+                    average_return=f"{Valore_Media / 100}"
+                )
 
-                    zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='green', size=2).encode(
-                        y='y'
-                    )
-                    three_line = alt.Chart(pd.DataFrame({'y': [Valore_Media]})).mark_rule(
-                        color='orange',
-                        strokeDash=[4, 4],
-                        size=2
-                    ).encode(y='y')
+                zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='green', size=2).encode(
+                    y='y'
+                )
+                three_line = alt.Chart(pd.DataFrame({'y': [Valore_Media]})).mark_rule(
+                    color='orange',
+                    strokeDash=[4, 4],
+                    size=2
+                ).encode(y='y')
 
-                    final_chart = (fill_area + bars + zero_line + three_line).properties(
-                        width=W,
-                        height=H,
-                        title='Interactive chart'
-                    )
+                final_chart = (fill_area + bars + zero_line + three_line).properties(
+                    width=W,
+                    height=H,
+                    title='Interactive chart'
+                )
 
-                    legend_data = pd.DataFrame({
-                        'color': ['gray', 'blue', 'red', 'green', 'orange'],
-                        'Chart elements': ['Standard Dev.', 'Positive Return', 'Negative Return', 'Zero Line',
-                                           'Average Return']
-                    })
+                legend_data = pd.DataFrame({
+                    'color': ['gray', 'blue', 'red', 'green', 'orange'],
+                    'Chart elements': ['Standard Dev.', 'Positive Return', 'Negative Return', 'Zero Line',
+                                       'Average Return']
+                })
 
-                    legend = alt.Chart(legend_data).mark_rect().encode(
-                        y=alt.Y('Chart elements:N', axis=alt.Axis(orient='right')),
-                        color=alt.Color('color:N', scale=None)
-                    ).properties(
-                        width=150,
-                        title='Legend'
-                    )
+                legend = alt.Chart(legend_data).mark_rect().encode(
+                    y=alt.Y('Chart elements:N', axis=alt.Axis(orient='right')),
+                    color=alt.Color('color:N', scale=None)
+                ).properties(
+                    width=150,
+                    title='Legend'
+                )
 
-                    combined_chart = alt.hconcat(final_chart, legend)
-                    st.altair_chart(combined_chart, use_container_width=True)
+                combined_chart = alt.hconcat(final_chart, legend)
+                st.altair_chart(combined_chart, use_container_width=True)
 
                 options_DB = ["Graphical", "For CSV download"]
                 db_key = f'db_select_{i + 1}'
