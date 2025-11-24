@@ -212,35 +212,43 @@ def main_page():
         AnnoFine = int(AnnoFin)
         end = date(AnnoFine, 1, 1)
         Text(f"\nEnd of the relevation: {end}")
-        year = 0
-        try:
-            data = yf.download(ticker, interval="1mo", progress=False)
-            if not data.empty:
-                first_date = data.index[0]
-                Text(f"Data of  {ticker} avaible from: {first_date.date()}")
-                year = int(first_date.strftime('%Y'))
-            else:
-                st.warning(f"# ⚠️ The asset {ticker} doesn't exist.")
-                st.write(
-                    "### Maybe you didn't select the right ticker.\n### You can find here the [Yahoo finance ticker's list](url)")
-                sys.exit(1)
-        except Exception as e:
-            st.warning(f"# ⚠️ The asset {ticker} doesn't exist.")
-            st.write(
-                "### Maybe you didn't select the right ticker.\n### You can find here the [Yahoo finance ticker's list](url)")
-            sys.exit(1)
-
-        if year >= AnnoFine:
-            st.warning(f"# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE {year}")
-            sys.exit(1)
-
-        end = date(AnnoFine, 1, 1)
-        Text(f"\nEnd year at: {end}")
-
-        if year < AnnoPartenz:
-            AnnoPartenza = AnnoPartenz
+        
+        # Determina l'anno di partenza basandosi sui dati disponibili
+        if AnnoPartenz < 1950:
+            AnnoPartenza = 1950  # Yahoo Finance ha dati dal 1950 circa
         else:
-            AnnoPartenza = year + 1
+            AnnoPartenza = AnnoPartenz
+        
+        inizio = date(AnnoPartenza, 1, 1)
+        Text(f"\nStarting calculations from: {inizio}")
+        
+        # Prova a scaricare i dati nell'intervallo richiesto
+        try:
+            df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
+            
+            if df.empty:
+                st.warning(f"# ⚠️ No data available for {ticker} in the selected period!")
+                st.write(f"### The ticker {ticker} might not have data between {AnnoPartenza} and {AnnoFine}.")
+                st.write("### Try selecting a different time period or check the ticker on [Yahoo Finance](https://finance.yahoo.com)")
+                sys.exit(1)
+            
+            # Trova la prima data effettivamente disponibile
+            first_date = df.index[0]
+            first_year = int(first_date.strftime('%Y'))
+            Text(f"Data for {ticker} available from: {first_date.date()}")
+            
+            # Aggiusta l'anno di partenza se necessario
+            if first_year > AnnoPartenza:
+                AnnoPartenza = first_year
+                st.info(f"ℹ️ Adjusted starting year to {AnnoPartenza} (first available data)")
+                inizio = date(AnnoPartenza, 1, 1)
+                Text(f"\nAdjusted starting calculations from: {inizio}")
+        except Exception as e:
+            st.warning(f"# ⚠️ Error downloading data for {ticker}")
+            st.write("### Maybe you didn't select the right ticker or there's a connection issue.")
+            st.write("### You can check the ticker on [Yahoo finance ticker's list](https://finance.yahoo.com/lookup/)")
+            st.write(f"Error details: {str(e)}")
+            sys.exit(1)
 
         Annate1 = list(range(AnnoPartenza, AnnoFine))
         NomiMesi = list(range(1, 13))
@@ -249,9 +257,6 @@ def main_page():
         Annate = []
         for i in Annate1:
             Annate.append(str(i))
-
-        inizio = date(AnnoPartenza, 1, 1)
-        Text(f"\nStarting calculations from: {inizio}")
 
         df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
         df = pd.DataFrame(df["Open"])
@@ -676,36 +681,45 @@ def Simple_strategy():
     AnnoFine = int(AnnoFin)
     end = date(AnnoFine, 1, 1)
     Text(f"\nEnd of the relevation: {end}")
-    year = 0
     
+    # Determina l'anno di partenza basandosi sui dati disponibili
+    if AnnoPartenz < 1950:
+        AnnoPartenza = 1950  # Yahoo Finance ha dati dal 1950 circa
+    else:
+        AnnoPartenza = AnnoPartenz
+    
+    inizio = date(AnnoPartenza, 1, 1)
+    Text(f"\nStarting calculations from: {inizio}")
+    
+    # Prova a scaricare i dati nell'intervallo richiesto
     try:
-        data = yf.download(ticker, interval="1mo", progress=False)
-        if not data.empty:
-            first_date = data.index[0]
-            Text(f"Data of  {ticker} avaible from: {first_date.date()}")
-            year = int(first_date.strftime('%Y'))
-        else:
-            st.warning(f"# ⚠️ The asset {ticker} doesn't exist.")
-            st.write(
-                "### Maybe you didn't select the right ticker.\n### You can find here the [Yahoo finance ticker's list](url)")
+        df_test = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
+        
+        if df_test.empty:
+            st.warning(f"# ⚠️ No data available for {ticker} in the selected period!")
+            st.write(f"### The ticker {ticker} might not have data between {AnnoPartenza} and {AnnoFine}.")
+            st.write("### Try selecting a different time period or check the ticker on [Yahoo Finance](https://finance.yahoo.com)")
             sys.exit(1)
+        
+        # Trova la prima data effettivamente disponibile
+        first_date = df_test.index[0]
+        first_year = int(first_date.strftime('%Y'))
+        Text(f"Data for {ticker} available from: {first_date.date()}")
+        
+        # Aggiusta l'anno di partenza se necessario
+        if first_year > AnnoPartenza:
+            AnnoPartenza = first_year
+            st.info(f"ℹ️ Adjusted starting year to {AnnoPartenza} (first available data)")
+            inizio = date(AnnoPartenza, 1, 1)
+            Text(f"\nAdjusted starting calculations from: {inizio}")
     except Exception as e:
-        st.warning(f"# ⚠️ The asset {ticker} doesn't exist.")
-        st.write(
-            "### Maybe you didn't select the right ticker.\n### You can find here the [Yahoo finance ticker's list](url)")
-        sys.exit(1)
-
-    if year >= AnnoFine:
-        st.warning(f"# ⚠️ ATTENTION!!!\n### You have to choose a data that is ABOVE {year}")
+        st.warning(f"# ⚠️ Error downloading data for {ticker}")
+        st.write("### Maybe you didn't select the right ticker or there's a connection issue.")
+        st.write("### You can check the ticker on [Yahoo finance ticker's list](https://finance.yahoo.com/lookup/)")
+        st.write(f"Error details: {str(e)}")
         sys.exit(1)
 
     end = date(AnnoFine, 1, 1)
-    Text(f"\nEnd year at: {end}")
-
-    if year < AnnoPartenz:
-        AnnoPartenza = AnnoPartenz
-    else:
-        AnnoPartenza = year + 1
 
     Annate1 = list(range(AnnoPartenza, AnnoFine))
     NomiMesi = list(range(1, 13))
@@ -715,7 +729,6 @@ def Simple_strategy():
     for i in Annate1:
         Annate.append(str(i))
 
-    inizio = date(AnnoPartenza, 1, 1)
     Text(f"\nStarting calculations from: {inizio}")
 
     df = yf.download(ticker, start=inizio, end=end, interval="1mo", progress=False)
