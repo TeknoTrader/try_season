@@ -14,7 +14,6 @@ import yfinance as yf
 # Disable yfinance verbose output
 import logging
 logging.getLogger('yfinance').setLevel(logging.CRITICAL)
-yf.pdr_override()
 
 # Colors
 sidebar_color = "#1A4054"
